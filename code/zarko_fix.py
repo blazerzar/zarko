@@ -72,7 +72,7 @@ model = Zarko(cnn_features=10, tabular_features=3).to('cuda')
 data = CustomImageDataset("code/20220619.csv", "maribor_letalisce_36")
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
-train_dataloader = DataLoader(data, batch_size=1, shuffle=True)
+train_dataloader = DataLoader(data, batch_size=32, shuffle=True)
 
 n_epochs = 25
 model.to(torch.device('cuda'))
@@ -80,8 +80,7 @@ model.train()
 loss_fn = nn.L1Loss()
 
 for epoch in range(n_epochs):
-    all_labels = []
-    all_preds = []
+    full_loss = torch.tensor(0, dtype=torch.float32, device='cuda')
     for i, (image, label) in enumerate(train_dataloader):
         image = image.to(torch.device('cuda'))
         label = label.to(torch.device('cuda'))
@@ -90,12 +89,16 @@ for epoch in range(n_epochs):
         pred = model(image)
 
         loss = loss_fn(pred.flatten(), label)
+        full_loss += loss
         loss.backward()
         optimizer.step()
 
-        all_labels.extend(label.cpu().numpy())
-        all_preds.extend(pred.cpu().detach().numpy())
-    print("Epoch:", epoch, "Loss:", loss_fn(torch.tensor(all_preds), torch.tensor(all_labels)))
+        if i % 100:
+            print(f'{loss.item():.2f}, '
+                  f'{pred.mean().item():.2f}, '
+                  f'{label[0].item():.2f}, '
+                  f'{pred[0].item():.2f}')
+    print("Epoch:", epoch, "Loss:", full_loss.item() / i)
 
 # save the model
 torch.save(model.state_dict(), "model.pth")

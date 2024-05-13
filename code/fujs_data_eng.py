@@ -1,11 +1,16 @@
 import pandas as pd
 from pathlib import Path
+from sklearn.ensemble import GradientBoostingRegressor as gbr
+from sklearn.preprocessing import StandardScaler
+import numpy as np
+
 
 DATA = Path(__file__).absolute().parents[1] / "data"
 
 def clean_data(df: pd.DataFrame, filename: Path) -> pd.DataFrame:
     # Drop all rows older than 1.1.2022
     df = df[df["valid"] >= "2022-01-01"]
+    print(df["valid"].min())
 
     # Drop Unnamed: 0, id columns
     df.drop(columns=["Unnamed: 0"], inplace=True)
@@ -58,42 +63,47 @@ def encode_time(data: dict) -> pd.DataFrame:
         # Dummy encode day period
         df = pd.get_dummies(df, columns=["day_period", "season"])
 
-        # Drop timestamp
-        df.drop(columns=["valid"], inplace=True)
-
         df.fillna(0, inplace=True)
         data[file] = df
 
     return data
 
-def merge_data(df: dict) -> pd.DataFrame:
+def merge_data(df: dict) -> None:
     # Merge all dataframes
     all_data = pd.concat(df.values(), ignore_index=True)
 
     # Save data
     all_data.to_csv(str(DATA / "all_data.csv"), index=False)
 
-    return all_data
 
+def model(data: pd.DataFrame) -> None:
+    # Split data
+    X = data.drop(columns=["valid", "g_sunrad"], axis=1)
+    y = data["g_sunrad"]
+
+    X_train, X_test, y_train, y_test = X.iloc[:int(0.8*len(X))], X.iloc[int(0.8*len(X)):], y.iloc[:int(0.8*len(y))], y.iloc[int(0.8*len(y)):]
+
+    # Scale data
+    scaler = StandardScaler()
+    X_train = scaler.fit_transform(X_train)
+    X_test = scaler.transform(X_test)
+
+    # Model
+    model = gbr()
+    model.fit(X_train, y_train)
+
+    y_pred = model.predict(X_test)
+
+    print(np.mean((y_pred - y_test)**2))
+
+
+def save_data(data: pd.DataFrame) -> None:
+    data.to_csv(str(DATA / "all_data.csv"), index=False)
 
 def main():
-    data = load_and_clean(_is_cleaned=True)
+    df = pd.read_csv(DATA / "all_data.csv")
 
-    data = encode_time(data)
-
-    # cleaned path
-    cleaned_path = DATA / "cleaned"
-
-    # Save data
-    for file, df in data.items():
-        df.to_csv(str(cleaned_path / file.stem) + ".csv", index=False)
-
-    data = {}
-    for file in (DATA / "cleaned").rglob("*.csv"):
-        df = pd.read_csv(file)
-        data[file.stem] = df
-
-    merge_data(data)
+    model(df)
 
 if __name__ == "__main__":
     main()

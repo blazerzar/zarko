@@ -10,8 +10,10 @@ import numpy as np
 import pandas as pd 
 import plotly.express as px 
 import streamlit as st  
+#ge go
+import plotly.graph_objects as go
 
-st.set_page_config(layout="wide")
+st.set_page_config(layout="wide", page_title='MOJ ☀️ žARKO')
 
 
 year_list = [2019, 2020, 2021, 2022, 2023, 2024]
@@ -19,7 +21,7 @@ with st.sidebar:
     st.title('Pregled')
     selected_year = st.selectbox('Leto', year_list)
     st.title('Obdobje')
-    obdobje_list = ["Tedensko", "Mesečno", "Letno"]
+    obdobje_list = ["Dnevno", "Tedensko", "Mesečno", "Letno"]
     selected_year = st.selectbox('Obdobje', obdobje_list)
 
 
@@ -36,21 +38,76 @@ df_jun_daily = pd.read_csv("./jun_daily.csv")
 df_hourly = pd.read_csv("./hourly_jun_3rd.csv")
 
 # dashboard title
-st.title("Preverite efektivnost vaših sončnih celic")
+st.title("MOJ ☀️ žARKO")
+st.subheader("Preverite efektivnost vaših sončnih celic")
 
 # year_list = [2019, 2020, 2021, 2022, 2023, 2024]
 # with st.sidebar:
 #     st.title('☀️žARKO dashboard')
 #     selected_year = st.selectbox('Leto', year_list)
 
-st.title('☀️ žARKO') 
+#st.title('MOJ ☀️ žARKO') 
 
-col1, col2 = st.columns([2,4])
+col1, col2 = st.columns([3,4])
 with col1:
     # create image on the left side
+    #add border to image
+    #st.image('img/personal_img.jpg', caption='Zadnja slika', output_format='PNG')
     st.image('img/personal_img.jpg', caption='Zadnja slika')
+    
+    st.markdown(
+        """
+    <style>
+    img {
+        border: 2px solid #ddd;
+        border-radius: 4px;
+        padding: 5px;
+        width: 100%;
+    }
+    </style>
+    """,
+
+        unsafe_allow_html=True,
+    )
 
 with col2:
+    
+    df_pred = pd.read_csv("model_output.csv")
+    df_pred = df_pred.reset_index()
+    df_pred["Predicted Production"] = df_pred["Predicted Production"] * 1/2.8
+    df_pred["True Production"] = df_pred["True Production"] * 1/2.8
+    current_time = time.strftime("%H:%M:%S", time.localtime())
+    df_truncated = df_pred#[df_pred["time"] < current_time]
+    fig2 = px.area(data_frame=df_truncated, x="time", y="True Production", title="Proizvodnja")
+    #fig2.add_scatter(x=df_pred["time"], y=df_pred["Predicted Production"], name="Napovedana proizvodnja")
+    fig2.update_layout(yaxis_range=[0, 100 + max(df_pred["True Production"].max(), df_pred["Predicted Production"].max())])
+    fig2.update_yaxes(title_text='Proizvodnja')
+    fig2.update_xaxes(title_text='Čas')
+    fig2.update_traces(line=dict(dash='dot'))
+    fig2.update_traces(fillcolor='rgba(235, 64, 52,0.9)', selector=dict(type='scatter'))
+    fig2.update_traces(line=dict(color='rgba(0,0,0,1)'), selector=dict(type='scatter'))
+    fig2.update_traces(line=dict(width=0), selector=dict(type='scatter'))
+
+    fig2.add_trace(go.Scatter(x=df_pred["time"], y=df_pred["Predicted Production"],
+                         line=dict(color='black', width=6, dash='dot')))
+
+    
+    predicted_sum = df_pred["Predicted Production"].sum()
+    true_sum = df_pred["True Production"].sum()
+    predicted_sum = int(predicted_sum)
+    true_sum = int(true_sum)
+    
+    #add legend
+    fig2.update_layout(legend=dict(
+        orientation="h",
+        yanchor="bottom",
+        y=1.02,
+        xanchor="right",
+        x=1
+    ))
+    #add entires to legend
+    
+    
     # # top-level filters
     # # creating a single-element container
     placeholder = st.empty()
@@ -77,9 +134,12 @@ with col2:
         kpi1, kpi2, kpi3 = st.columns(3)
 
         # fill in those three columns with respective metrics or KPIs
-        kpi1.metric("Dnevna proizvodnja ⚡", f"{14} kWh")
-        kpi2.metric("Predvidena proizvodnja ☀️", f"{20} kWh")
-        kpi3.metric("Izguba 💸", f"{6} kWh")
+        kpi1.metric("Dnevna proizvodnja ⚡", f"{true_sum} Wh")
+        kpi2.metric("Predvidena proizvodnja ☀️", f"{predicted_sum} Wh")
+        kpi3.metric("Izguba 💸", f"{np.round((true_sum)/1000 * 0.16, 2)}€", delta=str(-0.25)+"€")
+        #
+        #make it red
+        
         
         st.markdown(
             """
@@ -95,6 +155,9 @@ with col2:
             unsafe_allow_html=True,
         )
         
+    #enlarge fig2
+    fig2.update_layout(width=700, height=500)
+    st.write(fig2)
 
 
         # choice_col, _ = st.columns([0.5, 0.5])

@@ -14,7 +14,9 @@ IMAGES_PREDS = {
     "Novo mesto" : 741
 }
 
-st.set_page_config(layout="wide")
+#change favicon
+
+st.set_page_config(layout="wide", page_title='☀️ žARKO')
 
 year_list = [2019, 2020, 2021, 2022, 2023, 2024]
 with st.sidebar:
@@ -25,6 +27,8 @@ with st.sidebar:
     selected_year = st.selectbox('Obdobje', obdobje_list)
 
 st.title('☀️ žARKO') 
+
+#change tab name
 
 map = folium.Map(location=[46.0569, 14.85058], zoom_start=8.4, tiles='CartoDB positron')
 geojson_slo = json.load(open('UE.geojson', encoding='utf-8'))
@@ -54,7 +58,6 @@ choropleth = folium.Choropleth(
 for feature in choropleth.geojson.data['features']:
     value = df.loc[df["UE_UIME"] == feature['properties']['UE_UIME']]["value"].values[0]
     feature['properties']['weekly'] = f"Tedensko obsevanje {value} W/m2"
-    print(df.loc[df["UE_UIME"] == feature['properties']['UE_UIME']]["value"].values[0])
 
 col1, col2 = st.columns([2, 1])
 

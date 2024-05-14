@@ -9,7 +9,7 @@ from streamlit_folium import st_folium
 from streamlit_folium import folium_static
 
 IMAGES_PREDS = {
-    "Ljubljana" : 840,
+    "Ljubljana" : 1081,
     "Maribor" : 916,
     "Novo mesto" : 741
 }
@@ -30,6 +30,16 @@ map = folium.Map(location=[46.0569, 14.85058], zoom_start=8.4, tiles='CartoDB po
 geojson_slo = json.load(open('UE.geojson', encoding='utf-8'))
 df = pd.read_csv("UE.csv", encoding='utf-8')
 df["value"] = np.arange(1, len(df) + 1)
+df["value"] = df["ENRG"]
+
+IMAGES_PREDS = {}
+
+np.random.seed(42)
+for uime in df["UE_UIME"]:
+    #what row has the same name as uime
+    row = df.loc[df["UE_UIME"] == uime]
+    IMAGES_PREDS[uime] = row["value"].values[0] + np.random.randint(-100, 100)
+
 
 choropleth = folium.Choropleth(
     geo_data=geojson_slo,
@@ -42,7 +52,9 @@ choropleth = folium.Choropleth(
 )
 
 for feature in choropleth.geojson.data['features']:
-    feature['properties']['weekly'] = f"Tedensko obsevanje {5} W/m2"
+    value = df.loc[df["UE_UIME"] == feature['properties']['UE_UIME']]["value"].values[0]
+    feature['properties']['weekly'] = f"Tedensko obsevanje {value} W/m2"
+    print(df.loc[df["UE_UIME"] == feature['properties']['UE_UIME']]["value"].values[0])
 
 col1, col2 = st.columns([2, 1])
 
@@ -86,7 +98,7 @@ with col2:
                     "Obsevanje (W/m2)",
                     format="%f",
                     min_value=0,
-                    max_value= 100,# max(df_obs_sorted["value"]),
+                    max_value= 1500,# max(df_obs_sorted["value"]),
                     ),
                 },
         disabled=df.columns,

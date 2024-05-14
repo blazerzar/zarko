@@ -99,7 +99,7 @@ st.write("dwadawdwa")
 col1, col2 = st.columns([0.3, 0.7])
 with col1:
     # create image on the left side
-    st.image('/home/jovana/Documents/zarko/web_app/CM00006_202206200000_05.jpg', caption='Sunrise by the mountains')
+    st.image('../CM00006_202206200000_05.jpg', caption='Sunrise by the mountains')
 
 with col2:
     # # top-level filters

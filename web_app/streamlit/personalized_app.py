@@ -13,70 +13,20 @@ import streamlit as st
 
 st.set_page_config(layout="wide")
 
-# year_list = [2019, 2020, 2021, 2022, 2023, 2024]
-# with st.sidebar:
-#     st.title('☀️žARKO dashboard')
-#     selected_year = st.selectbox('Leto', year_list)
 
-# st.title('Preverite svoje sončne lokacije') 
-# st.write("Ta stran vam omogoča, da preverite stanje vaših sončnih celic.")
-
-# # map = folium.Map(location=[46.0569, 14.85058], zoom_start=8.4, tiles='CartoDB positron')
-# # geojson_slo = json.load(open('UE.geojson', encoding='utf-8'))
-# # df = pd.read_csv("UE.csv", encoding='utf-8')
-# # df["value"] = np.random.randint(1, 100, len(df))
-
-# # choropleth = folium.Choropleth(
-# #     geo_data=geojson_slo,
-# #     data=df,
-# #     columns=('UE_MID', 'value'),
-# #     key_on='feature.properties.UE_MID',
-# #     line_opacity=0.8,
-# #     highlight=True,
-# #     fill_color='YlOrRd',
-# # )
-
-# # for feature in choropleth.geojson.data['features']:
-# #     feature['properties']['weekly'] = f"Tedensko obsevanje {np.random.randint(1, 100)} W/m2"
-
-# # col1, col2 = st.columns([2, 1])
-# # with col1:
-# #     with st.container():
-# #         choropleth.geojson.add_child(
-# #             folium.features.GeoJsonTooltip(['UE_UIME', "weekly"], labels=False)
-# #         )
-# #         choropleth.geojson.add_to(map)
-# #         st_map = st_folium(map, width=700, height=450, returned_objects=[])
-
-# #     df_obs = df[['UE_UIME', 'value']]
-
-# #     df_obs_sorted = df_obs.sort_values(by="value", ascending=False)
-
-# with col2:
-#     st.markdown('#### Sončne lokacije ')
-
-#     st.dataframe(df_obs_sorted,
-#                 column_order=("UE_UIME", "value"),
-#                 hide_index=True,
-#                 width=None,
-#                 column_config={
-#                 "UE_UIME": st.column_config.TextColumn(
-#                     "UE_UIME",
-#                 ),
-#                 "value": st.column_config.ProgressColumn(
-#                     "Obsevanje (W/m2)",
-#                     format="%f",
-#                     min_value=0,
-#                     max_value= 150,# max(df_obs_sorted["value"]),
-#                     )}
-#                 )
+year_list = [2019, 2020, 2021, 2022, 2023, 2024]
+with st.sidebar:
+    st.title('Pregled')
+    selected_year = st.selectbox('Leto', year_list)
+    st.title('Obdobje')
+    obdobje_list = ["Tedensko", "Mesečno", "Letno"]
+    selected_year = st.selectbox('Obdobje', obdobje_list)
 
 
 # read csv from a github repo
 dataset_url = "https://raw.githubusercontent.com/Lexie88rus/bank-marketing-analysis/master/bank.csv"
 
 # read csv from a URL
-@st.experimental_memo
 def get_data() -> pd.DataFrame:
     return pd.read_csv(dataset_url)
 
@@ -94,16 +44,14 @@ st.title("Preverite efektivnost vaših sončnih celic")
 #     selected_year = st.selectbox('Leto', year_list)
 
 st.title('☀️ žARKO') 
-st.write("dwadawdwa")
 
-col1, col2 = st.columns([0.3, 0.7])
+col1, col2 = st.columns([2,4])
 with col1:
     # create image on the left side
-    st.image('/home/jovana/Documents/zarko/web_app/CM00006_202206200000_05.jpg', caption='Sunrise by the mountains')
+    st.image('img/personal_img.jpg', caption='Zadnja slika')
 
 with col2:
     # # top-level filters
-
     # # creating a single-element container
     placeholder = st.empty()
 
@@ -129,11 +77,9 @@ with col2:
         kpi1, kpi2, kpi3 = st.columns(3)
 
         # fill in those three columns with respective metrics or KPIs
-        kpi1.metric(
-            label="Količina pridobljenega globalnega segrevanja 🌡️",
-            value=round(avg_age),
-            delta=round(avg_age) - 10,
-        )
+        kpi1.metric("Dnevna proizvodnja ⚡", f"{14} kWh")
+        kpi2.metric("Predvidena proizvodnja ☀️", f"{20} kWh")
+        kpi3.metric("Izguba 💸", f"{6} kWh")
         
         st.markdown(
             """
@@ -148,48 +94,44 @@ with col2:
         """,
             unsafe_allow_html=True,
         )
+        
 
-        kpi2.metric(
-            label="Količina shranjenega denarja 💰",
-            value=int(count_married),
-            delta=-10 + count_married,
-        )
-            
-        choice_col, _ = st.columns([0.5, 0.5])
-        with choice_col:
-            pregled_choice_list = ["dnevni", "tedenski", "mesečni"]
-            selected_choice = st.selectbox('Izberite pregled', pregled_choice_list)
 
-        if selected_choice == "dnevni":
-            _col1, _col2 = st.columns([0.5, 0.5])
-            with _col1:
-                # take every second instance
-                fig2 = px.line(data_frame=df_hourly, x="hours", y="measured")
-                fig2.add_scatter(x=df_hourly["hours"], y=df_hourly["predicted"])
-                fig2.update_layout(yaxis_range=[0, 1200])
-                st.write(fig2)
-            with _col2:
-                st.empty()
-        elif selected_choice == "tedenski":
-            _col1, _col2 = st.columns([0.5, 0.5])
-            with _col1:
-                # take every second instance
-                fig2 = px.line(data_frame=df_hourly, x="hours", y="measured")
-                fig2.add_scatter(x=df_hourly["hours"], y=df_hourly["predicted"])
-                fig2.update_layout(yaxis_range=[0, 1200])
-                st.write(fig2)
-            with _col2:
-                st.empty()
-        elif selected_choice == "mesečni":
-            _col1, _col2 = st.columns([0.5, 0.5])
-            with _col1:
-                # take every second instance
-                fig2 = px.line(data_frame=df_hourly, x="hours", y="measured")
-                fig2.add_scatter(x=df_hourly["hours"], y=df_hourly["predicted"])
-                fig2.update_layout(yaxis_range=[0, 1200])
-                st.write(fig2)
-            with _col2:
-                st.empty()
+        # choice_col, _ = st.columns([0.5, 0.5])
+        # with choice_col:
+        #     pregled_choice_list = ["dnevni", "tedenski", "mesečni"]
+        #     selected_choice = st.selectbox('Izberite pregled', pregled_choice_list)
+
+        # if selected_choice == "dnevni":
+        #     _col1, _col2 = st.columns([0.5, 0.5])
+        #     with _col1:
+        #         # take every second instance
+        #         fig2 = px.line(data_frame=df_hourly, x="hours", y="measured")
+        #         fig2.add_scatter(x=df_hourly["hours"], y=df_hourly["predicted"])
+        #         fig2.update_layout(yaxis_range=[0, 1200])
+        #         st.write(fig2)
+        #     with _col2:
+        #         st.empty()
+        # elif selected_choice == "tedenski":
+        #     _col1, _col2 = st.columns([0.5, 0.5])
+        #     with _col1:
+        #         # take every second instance
+        #         fig2 = px.line(data_frame=df_hourly, x="hours", y="measured")
+        #         fig2.add_scatter(x=df_hourly["hours"], y=df_hourly["predicted"])
+        #         fig2.update_layout(yaxis_range=[0, 1200])
+        #         st.write(fig2)
+        #     with _col2:
+        #         st.empty()
+        # elif selected_choice == "mesečni":
+        #     _col1, _col2 = st.columns([0.5, 0.5])
+        #     with _col1:
+        #         # take every second instance
+        #         fig2 = px.line(data_frame=df_hourly, x="hours", y="measured")
+        #         fig2.add_scatter(x=df_hourly["hours"], y=df_hourly["predicted"])
+        #         fig2.update_layout(yaxis_range=[0, 1200])
+        #         st.write(fig2)
+        #     with _col2:
+        #         st.empty()
         
 
         # col1_figs, col2_figs = st.columns(2)

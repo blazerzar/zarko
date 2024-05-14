@@ -2,10 +2,17 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
+import plotly.graph_objects as go
 import json
 import folium
 from streamlit_folium import st_folium
 from streamlit_folium import folium_static
+
+IMAGES_PREDS = {
+    "Ljubljana" : 840,
+    "Maribor" : 916,
+    "Novo mesto" : 741
+}
 
 st.set_page_config(layout="wide")
 
@@ -13,6 +20,9 @@ year_list = [2019, 2020, 2021, 2022, 2023, 2024]
 with st.sidebar:
     st.title('Pregled')
     selected_year = st.selectbox('Leto', year_list)
+    st.title('Obdobje')
+    obdobje_list = ["Tedensko", "Mesečno", "Letno"]
+    selected_year = st.selectbox('Obdobje', obdobje_list)
 
 st.title('☀️ žARKO') 
 
@@ -51,7 +61,10 @@ with col1:
     if st_map['last_active_drawing']:
         loc_name = st_map['last_active_drawing']['properties']['UE_UIME']
 
-    st.write(loc_name)
+    #st.write(loc_name)
+
+    if loc_name in IMAGES_PREDS:
+        st.image(f"img/{loc_name}.jpg", caption=loc_name, width=700)    
 
 
 
@@ -78,3 +91,21 @@ with col2:
                 },
         disabled=df.columns,
     )
+    if loc_name in IMAGES_PREDS:
+        st.markdown(f"### Predvideno obsevanje:")
+
+        fig = go.Figure(go.Indicator(
+            mode = "gauge+number+delta",
+            value = IMAGES_PREDS[loc_name],
+            domain = {'x': [0, 1], 'y': [0, 1]},
+            title = {'text': f"Obsevanje W/m2 <br> {loc_name}", 'font': {'size': 24}},
+            gauge = {
+                'axis': {'range': [None, 1200], 'tickwidth': 1, 'tickcolor': "darkblue"},
+                'bar': {'color': "#fd8d3c"},
+        }))
+        fig.update_layout(width=300, height=300)
+
+        st.plotly_chart(fig, )
+
+
+
